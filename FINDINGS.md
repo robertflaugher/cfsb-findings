@@ -3,7 +3,7 @@
 **Maintainer:** Independent CFSB developer and consultant
 **Platform:** Claude for Small Business (CFSB), launched May 13, 2026
 **Environment:** Claude Desktop + Claude Cowork + Small Business plugin, Mac, Pro account
-**Last updated:** 2026-06-13
+**Last updated:** 2026-06-19
 **Status:** Active — updated after each documented skill run
 
 ---
@@ -18,7 +18,7 @@ Two audiences are intended.
 
 **Anthropic and CFSB developers** — This log surfaces edge cases, failure modes, and UX friction points encountered during real-world testing. It is written as structured field notes, not a complaint. Every finding is tied to a specific observed behavior. Corrections and clarifications are welcome via GitHub issues.
 
-Findings are organized by skill run or platform behavior category. Within each section, findings are numbered sequentially starting at F-1. Status tags indicate current standing: **Confirmed**, **Unconfirmed**, or **Retracted**.
+Findings are organized by skill run or platform behavior category. Finding IDs (F-001, F-002, ...) are sequential across the entire document — an ID is never reused and always refers to the same finding, regardless of which section it sits in. Within each section, findings appear in the order they were logged. Status tags indicate current standing: **Confirmed**, **Unconfirmed**, or **Retracted**.
 
 ---
 
@@ -46,6 +46,42 @@ Findings originate from two sources. Tool Tests (TT) are findings produced durin
 
 ---
 
+## Skill Run: /call-list
+
+**Run TT-1 (partial)** — Run from Bangkok with VPN on. Gmail and Google Calendar not connected at time of run.
+
+---
+
+**F-001 — Runtime of 2:26 from Bangkok with VPN on**
+**Status:** Unconfirmed
+
+/call-list completed in 2 minutes 26 seconds when run from Bangkok with VPN on. Whether this reflects geography, VPN routing, session state, or normal variance is unconfirmed. A clean controlled retest with all connectors pre-authorized and VPN off is pending (TT-5).
+
+---
+
+**F-002 — Graceful degradation when connectors are missing**
+**Status:** Confirmed
+
+/call-list generated a usable call list despite Gmail and Google Calendar not being connected. It explicitly told the user what additional value those connectors would add. This is well-designed behavior.
+
+---
+
+**F-003 — Contact selection logic is opaque**
+**Status:** Confirmed
+
+/call-list offered to write tone-matched follow-up emails for two specific contacts without explaining why those contacts were selected over others. The ranking and selection logic is not surfaced to the user.
+
+---
+
+**F-004 — Output quality cannot be validated without purpose-built test data**
+**Status:** Confirmed
+
+/call-list output cannot be validated against known ground truth without deliberately seeding CRM data with contacts of known relative priority. Output quality verification requires synthetic test data with a known correct answer.
+
+**Recommendation:** Before deploying /call-list with a real client, seed HubSpot with test contacts of known priority ordering and confirm the skill ranks them correctly.
+
+---
+
 ## Skill Run: /monday-brief
 
 **Run TT-1a** — First run. Gmail connector added mid-execution. Runtime: 36 minutes.
@@ -54,14 +90,14 @@ Findings originate from two sources. Tool Tests (TT) are findings produced durin
 
 ---
 
-**F-1 — Slash command invocation is unreliable**
+**F-005 — Slash command invocation is unreliable**
 **Status:** Confirmed
 
 `/monday-brief` invoked successfully via slash command in TT-1a. `/call-list` returned "Unknown skill: call-list" in the same environment. Slash command reliability is inconsistent across skills and sessions.
 
 ---
 
-**F-2 — Plain English invocation works where slash commands fail**
+**F-006 — Plain English invocation works where slash commands fail**
 **Status:** Confirmed
 
 Plain English skill description successfully triggered /monday-brief in the same session where slash command invocation had previously failed. Plain English is the more reliable invocation method.
@@ -70,28 +106,28 @@ Plain English skill description successfully triggered /monday-brief in the same
 
 ---
 
-**F-3 — Mid-run connector authorization is permitted but costly**
+**F-007 — Mid-run connector authorization is permitted but costly**
 **Status:** Confirmed
 
 Cowork allowed a mid-run Gmail connector authorization when /monday-brief detected Gmail was missing. The skill did not abort. However, mid-run connector addition contributed to a 36-minute runtime for TT-1a.
 
 ---
 
-**F-4 — Mid-run connector authorization does not fully complete the handshake**
+**F-008 — Mid-run connector authorization does not fully complete the handshake**
 **Status:** Confirmed
 
 Despite being authorized mid-run in TT-1a, Gmail showed as needing reconnection in the /monday-brief output at the end of that same run. Mid-run authorization is insufficient for reliable connector state.
 
 ---
 
-**F-5 — Runtime drops 10x when all connectors are pre-authorized**
+**F-009 — Runtime drops 10x when all connectors are pre-authorized**
 **Status:** Confirmed
 
 TT-1a (mid-run Gmail addition): 36 minutes. TT-1b (all connectors pre-authorized): 3 minutes 25 seconds. The difference is entirely attributable to connector state at invocation time.
 
 ---
 
-**F-6 — Pre-authorization requirement is not communicated by the platform**
+**F-010 — Pre-authorization requirement is not communicated by the platform**
 **Status:** Confirmed
 
 Pre-authorizing all connectors before invoking any skill is a prerequisite for normal runtime. The platform communicates this nowhere — not during onboarding, not in skill documentation, not at invocation time.
@@ -100,42 +136,42 @@ Pre-authorizing all connectors before invoking any skill is a prerequisite for n
 
 ---
 
-**F-7 — Skills stall silently on permission prompts with no alert mechanism**
+**F-011 — Skills stall silently on permission prompts with no alert mechanism**
 **Status:** Confirmed
 
 Skills that trigger permission prompts mid-run require the user to actively monitor execution and respond. There is no notification or alert when a prompt appears. A skill will stall indefinitely and silently until the user responds. This is a significant UX problem for SMB owners who expect low-supervision behavior from an AI assistant.
 
 ---
 
-**F-8 — "Always allow" permission prompt scope is ambiguous**
+**F-012 — "Always allow" permission prompt scope is ambiguous**
 **Status:** Confirmed
 
 The "Always allow" permission prompt on QBO Balance Sheet tool calls reappeared in TT-1b despite QBO having been previously authorized. The button label "Always allow" does not communicate what scope the grant covers, whether it persists across sessions, or whether it applies to the connector globally or only to the specific tool call type.
 
 ---
 
-**F-9 — QBO permission prompts recur across sessions**
+**F-013 — QBO permission prompts recur across sessions**
 **Status:** Confirmed
 
 QuickBooks permission prompts reappeared during TT-1b despite QBO having been previously authorized in TT-1a. Whether permanent per-connector authorization is achievable through any available mechanism is an open question.
 
 ---
 
-**F-10 — Gmail connector produced accurate live output**
+**F-014 — Gmail connector produced accurate live output**
 **Status:** Confirmed
 
 /monday-brief pulled live Gmail watch-list items accurately in TT-1b. This is the first confirmed evidence of the Gmail connector producing meaningful output in a skill run.
 
 ---
 
-**F-11 — Google Drive save silently skipped when connector is absent**
+**F-015 — Google Drive save silently skipped when connector is absent**
 **Status:** Confirmed
 
 In TT-1a, /monday-brief attempted to save the brief as a markdown file to Google Drive, but Google Drive was not connected at that time. The skill proceeded without error and did not warn the user that the save would fail.
 
 ---
 
-**F-12 — Google Drive save silently skipped even when connector is active**
+**F-016 — Google Drive save silently skipped even when connector is active**
 **Status:** Confirmed
 
 In TT-1b and TT-1c, /monday-brief failed to save the brief to Google Drive despite the Google Drive connector being active and authorized. The Progress tab showed no Google Drive activity during either run. The skill is not attempting the save at all — it is silently ignoring the connected connector.
@@ -144,53 +180,17 @@ In TT-1b and TT-1c, /monday-brief failed to save the brief to Google Drive despi
 
 ---
 
-**F-13 — VPN does not cause skill stalls**
+**F-017 — VPN does not cause skill stalls**
 **Status:** Retracted
 
 ExpressVPN initially appeared to cause skill stalls. Controlled testing did not confirm this. The apparent stall was caused by session state corruption from hitting Escape to abort a prior run, not VPN interference.
 
 ---
 
-**F-14 — VPN routing to a US endpoint does not materially affect runtime**
+**F-018 — VPN routing to a US endpoint does not materially affect runtime**
 **Status:** Confirmed
 
 TT-1c controlled comparison — ExpressVPN set to Los Angeles versus VPN off, both from Bangkok — produced runtimes of 1:50 and 1:57 respectively. The difference is within normal variance. VPN routing does not materially affect /monday-brief runtime under clean session conditions.
-
----
-
-## Skill Run: /call-list
-
-**Run TT-1 (partial)** — Run from Bangkok with VPN on. Gmail and Google Calendar not connected at time of run.
-
----
-
-**F-1 — Runtime of 2:26 from Bangkok with VPN on**
-**Status:** Unconfirmed
-
-/call-list completed in 2 minutes 26 seconds when run from Bangkok with VPN on. Whether this reflects geography, VPN routing, session state, or normal variance is unconfirmed. A clean controlled retest with all connectors pre-authorized and VPN off is pending (TT-5).
-
----
-
-**F-2 — Graceful degradation when connectors are missing**
-**Status:** Confirmed
-
-/call-list generated a usable call list despite Gmail and Google Calendar not being connected. It explicitly told the user what additional value those connectors would add. This is well-designed behavior.
-
----
-
-**F-3 — Contact selection logic is opaque**
-**Status:** Confirmed
-
-/call-list offered to write tone-matched follow-up emails for two specific contacts without explaining why those contacts were selected over others. The ranking and selection logic is not surfaced to the user.
-
----
-
-**F-4 — Output quality cannot be validated without purpose-built test data**
-**Status:** Confirmed
-
-/call-list output cannot be validated against known ground truth without deliberately seeding CRM data with contacts of known relative priority. Output quality verification requires synthetic test data with a known correct answer.
-
-**Recommendation:** Before deploying /call-list with a real client, seed HubSpot with test contacts of known priority ordering and confirm the skill ranks them correctly.
 
 ---
 
@@ -200,63 +200,63 @@ Findings in this section were produced during connector setup across multiple se
 
 ---
 
-**F-1 — No data security explanation during QuickBooks connection**
+**F-019 — No data security explanation during QuickBooks connection**
 **Status:** Confirmed
 
 CFSB onboarding does not explain what Claude can see or do with QuickBooks data at any point during the connection flow. A real SMB client connecting their financial data receives no disclosure.
 
 ---
 
-**F-2 — OAuth error message uses engineering language**
+**F-020 — OAuth error message uses engineering language**
 **Status:** Confirmed
 
 When the QBO connection fails, the error message uses the term "OAuth flow." No small business owner understands what OAuth means. This is engineering language in a consumer product.
 
 ---
 
-**F-3 — Failed OAuth leaves user with no clear recovery path**
+**F-021 — Failed OAuth leaves user with no clear recovery path**
 **Status:** Unconfirmed (detail)
 
 When the OAuth connection fails, the error message appears to instruct users to run a specific command to authenticate. The exact command text was not captured and has not been confirmed. The core behavior — a failed OAuth state with no clear recovery path for a non-technical user — is consistent with the surrounding findings. Exact error text will be captured on next occurrence.
 
 ---
 
-**F-4 — QuickBooks connector shows as connected before authentication completes**
+**F-022 — QuickBooks connector shows as connected before authentication completes**
 **Status:** Confirmed
 
 The QuickBooks connector appears connected in the Connectors directory before actual authentication has completed. The failure is only revealed when a skill attempts to use it. This silent failure would mislead any user who did not immediately run a skill after connecting.
 
 ---
 
-**F-5 — Connector permissions screen uses accounting jargon**
+**F-023 — Connector permissions screen uses accounting jargon**
 **Status:** Confirmed
 
 The connector permissions screen lists tool names such as "A/P Aging Detail" and "A/R Aging Summary." Most small business owners will not understand these terms. This screen was written for accountants, not SMB owners.
 
 ---
 
-**F-6 — Industry Benchmarking tool is not mentioned in onboarding**
+**F-024 — Industry Benchmarking tool is not mentioned in onboarding**
 **Status:** Confirmed
 
 The Industry Benchmarking tool is not mentioned anywhere in the onboarding flow despite being a potentially compelling value proposition for SMB owners evaluating the platform.
 
 ---
 
-**F-7 — QuickBooks connection succeeds visually but fails silently at runtime**
+**F-025 — QuickBooks connection succeeds visually but fails silently at runtime**
 **Status:** Confirmed
 
-The QBO connection appears to succeed in the connector setup UI but fails silently when a skill actually attempts to use it. The system only surfaces the authentication problem when real work is attempted. Related to F-4.
+The QBO connection appears to succeed in the connector setup UI but fails silently when a skill actually attempts to use it. The system only surfaces the authentication problem when real work is attempted. Related to F-022.
 
 ---
 
-**F-8 — QBO connector routes to production onboarding instead of recognizing existing Intuit account**
+**F-026 — QBO connector routes to production onboarding instead of recognizing existing Intuit account**
 **Status:** Confirmed
 
 When attempting to complete authentication, CFSB redirected to a page prompting activation of a free QuickBooks Online trial. The connector is routing to QBO production onboarding rather than recognizing an existing Intuit developer account.
 
 ---
 
-**F-9 — QBO sandbox accounts are not supported**
+**F-027 — QBO sandbox accounts are not supported**
 **Status:** Confirmed
 
 CFSB's QuickBooks connector does not support Intuit developer sandbox accounts. It routes all connections through QBO production onboarding, making free sandbox testing impossible through the standard connector flow.
@@ -265,28 +265,28 @@ CFSB's QuickBooks connector does not support Intuit developer sandbox accounts. 
 
 ---
 
-**F-10 — Onboarding does not distinguish Intuit developer accounts from QBO user accounts**
+**F-028 — Onboarding does not distinguish Intuit developer accounts from QBO user accounts**
 **Status:** Confirmed
 
 CFSB onboarding does not explain the difference between an Intuit developer account and a QuickBooks Online user account. A developer setting up a testing environment can easily get stuck authenticating with the wrong account type.
 
 ---
 
-**F-11 — QBO connection threw an OAuth warning before succeeding**
+**F-029 — QBO connection threw an OAuth warning before succeeding**
 **Status:** Unconfirmed
 
 Even with a production QBO account, the connector threw an OAuth warning before completing successfully. The warning scrolled past too quickly to capture. The connection handshake appears to have a recoverable error state that would alarm a non-technical user. Exact warning text not captured.
 
 ---
 
-**F-12 — HubSpot OAuth modal presents conflicting instructions**
+**F-030 — HubSpot OAuth modal presents conflicting instructions**
 **Status:** Confirmed
 
 The HubSpot OAuth flow presents a "Grant access" modal at the critical authorization step while simultaneously displaying a message saying "Complete the sign-in steps in the new browser tab." These two instructions appear to conflict.
 
 ---
 
-**F-13 — HubSpot OAuth modal has no actionable button**
+**F-031 — HubSpot OAuth modal has no actionable button**
 **Status:** Confirmed
 
 The "Grant access to HubSpot" modal contains no actionable button and no explicit instruction to return to the browser tab where OAuth is completing. The connection succeeded only because the user correctly inferred the right action. A less technical user would likely abandon at this step.
@@ -295,11 +295,11 @@ The "Grant access to HubSpot" modal contains no actionable button and no explici
 
 ## Platform Behavior: Slash Command Invocation
 
-See also Skill Run: /monday-brief F-1 and F-2, and Skill Run: /call-list F-1.
+See also Skill Run: /monday-brief F-005 and F-006, and Skill Run: /call-list F-001.
 
 ---
 
-**F-1 — Slash command failures produce no explanation**
+**F-032 — Slash command failures produce no explanation**
 **Status:** Confirmed
 
 Slash command invocation fails intermittently across multiple sessions and multiple skills. When it fails, the user receives an "Unknown skill" error with no explanation and no fallback guidance. SMB owners who learn slash commands from documentation will hit silent failures with no path forward.
@@ -310,14 +310,14 @@ Slash command invocation fails intermittently across multiple sessions and multi
 
 ---
 
-**F-1 — Permission prompt text was not captured**
+**F-033 — Permission prompt text was not captured**
 **Status:** Confirmed (detail unconfirmed)
 
 Claude in Cowork requested explicit user permission for two actions before completing an invoice query. The exact text of those prompts was not captured. Capturing exact prompt text is a methodology requirement for all future runs.
 
 ---
 
-**F-2 — Transient status messages are unreadable**
+**F-034 — Transient status messages are unreadable**
 **Status:** Confirmed
 
 Cowork provides no way to pause, replay, or review transient status messages that appear during skill execution. These messages scroll past at speed and are unreadable under normal operating conditions.
@@ -328,7 +328,7 @@ Cowork provides no way to pause, replay, or review transient status messages tha
 
 ---
 
-**F-1 — MacInCloud Managed Plan is incompatible with Cowork**
+**F-035 — MacInCloud Managed Plan is incompatible with Cowork**
 **Status:** Confirmed
 
 Claude Cowork's workspace initialization requires admin-level access to Apple's Virtualization framework. MacInCloud's Managed Server plan runs with standard user permissions and cannot satisfy this requirement. US-based latency testing via MacInCloud on the standard plan is not feasible.
@@ -341,10 +341,12 @@ Findings in this section originate from external sources — community posts, pu
 
 ---
 
-**F-1 — Forbes article significantly understates platform capability**
+**F-036 — Forbes article significantly understates platform capability**
 **Status:** Confirmed
 
 A May 2026 Forbes article on CFSB describes the platform as offering "15 workflow actions." The Small Business plugin contains 30 skills across five categories. Inaccurate capability descriptions in mainstream coverage create mismatched expectations for evaluators arriving through press coverage.
+
+**Impact:** Evaluators who encounter CFSB through mainstream press before trying it firsthand may significantly underestimate platform scope, affecting whether they investigate further.
 
 ---
 
@@ -352,13 +354,13 @@ A May 2026 Forbes article on CFSB describes the platform as offering "15 workflo
 
 The following questions are raised by findings above and are under active investigation.
 
-**OI-1** (from Skill Run: /monday-brief F-8, F-9) — What is the full scope of the "Always allow" permission grant? Does it persist across sessions? Does it apply to the connector globally or only the specific tool call type?
+**OI-1** (from F-012, F-013) — What is the full scope of the "Always allow" permission grant? Does it persist across sessions? Does it apply to the connector globally or only the specific tool call type?
 
-**OI-2** (from Skill Run: /monday-brief F-12) — Is the Google Drive save failure in /monday-brief a connector issue, an incomplete feature, or a configuration dependency? Is there any condition under which it works?
+**OI-2** (from F-016) — Is the Google Drive save failure in /monday-brief a connector issue, an incomplete feature, or a configuration dependency? Is there any condition under which it works?
 
-**OI-3** (from Skill Run: /call-list F-1) — What is the clean /call-list runtime with all connectors pre-authorized and VPN off? Current timing data is from an uncontrolled run. TT-5 will establish the baseline.
+**OI-3** (from F-001) — What is the clean /call-list runtime with all connectors pre-authorized and VPN off? Current timing data is from an uncontrolled run. TT-5 will establish the baseline.
 
-**OI-4** (from Skill Run: /call-list F-3) — Does adding a CLAUDE.md business context file to Cowork improve /call-list contact selection quality and make the selection logic more transparent?
+**OI-4** (from F-003) — Does adding a CLAUDE.md business context file to Cowork improve /call-list contact selection quality and make the selection logic more transparent?
 
 **OI-5** (CT) — Does CFSB run the reasoning agent in a sandbox truly separated from connector actions, as claimed by at least one community developer? What evidence supports or contradicts this?
 
@@ -391,5 +393,10 @@ This log is updated at the end of each documented session. New sections are adde
 If you are a developer working on the CFSB platform and have found this file: the findings above are offered as field notes from real-world testing, in the hope that they are useful.
 
 ---
+
+**Author:** Robert Flaugher
+**X:** [@robertflaugher](https://x.com/robertflaugher)
+**LinkedIn:** [linkedin.com/in/flaugher](https://www.linkedin.com/in/flaugher/)
+**Email:** robert@ingenuityventures.co
 
 *Maintained by an independent CFSB developer and consultant. Not affiliated with Anthropic.*
